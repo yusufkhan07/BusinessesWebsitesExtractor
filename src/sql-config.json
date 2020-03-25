@@ -1,0 +1,14 @@
+{
+  "development": {
+    "database": "some_db",
+    "dialect": "sqlite",
+    "storage": "db.sqlite"
+  },
+  "production": {
+    "username": "",
+    "password": null,
+    "database": "hotsausemedia",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
