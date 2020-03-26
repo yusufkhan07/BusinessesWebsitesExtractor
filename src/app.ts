@@ -17,16 +17,12 @@ const API_KEY = JSON.parse(fs.readFileSync(`${__dirname}/key.json`, "utf8"))
 // load sql config
 const sql_credentials = JSON.parse(
   fs.readFileSync(`${__dirname}/sql-config.json`, "utf8")
-).development;
+).production;
 
 // connect to db
 const sequelize = new Sequelize({
   models: [__dirname + "/models"],
   ...sql_credentials
-  // // for sqlite
-  // database: "some_db",
-  // dialect: "sqlite",
-  // storage: "db.sqlite"
 });
 
 /**
@@ -38,14 +34,17 @@ const placeDetails = async (place_id: string) => {
   const place = await client.placeDetails({
     params: {
       key: API_KEY,
-      fields: ["website"],
+      // fields: ["website"],
       place_id
     }
   });
 
   return {
     place_id,
-    website: place.data.result.website
+    website: place.data.result.website,
+    name: place.data.result.name,
+    formatted_phone_number: place.data.result.formatted_phone_number,
+    international_phone_number: place.data.result.international_phone_number
   };
 };
 
@@ -63,6 +62,9 @@ const getPlacesByLocation = async (location, radius: number) => {
   const place_website_list: Array<{
     place_id: string;
     website: string | undefined;
+    name: string | undefined;
+    formatted_phone_number: string | undefined;
+    international_phone_number: string | undefined;
   }> = [];
 
   do {
@@ -82,6 +84,9 @@ const getPlacesByLocation = async (location, radius: number) => {
     const promises = [] as Promise<{
       place_id: string;
       website: string | undefined;
+      name: string | undefined;
+      formatted_phone_number: string | undefined;
+      international_phone_number: string | undefined;
     }>[];
 
     places.forEach(place => {
@@ -90,9 +95,14 @@ const getPlacesByLocation = async (location, radius: number) => {
       }
     });
 
+    // promises.push(placeDetails("ChIJO30UDHKV3zgR6S7lsn61fK0"));
+    // await new Promise(r => setTimeout(r, 2000));
+
     place_website_list.push(...(await Promise.all(promises)));
 
     pagetoken = response.data.next_page_token;
+
+    // break;
   } while (pagetoken);
 
   return place_website_list;
@@ -111,13 +121,22 @@ const main = async (location, radius: number) => {
   }) as Array<{
     place_id: string;
     website: string;
+    name: string | undefined;
+    formatted_phone_number: string | undefined;
+    international_phone_number: string | undefined;
   }>;
 
   console.log(`found ${filtered_data.length} places with a website address.`);
 
   // add to db
   WebsiteModel.bulkCreate(filtered_data, {
-    fields: ["place_id", "website"],
+    fields: [
+      "place_id",
+      "website",
+      "name",
+      "formatted_phone_number",
+      "international_phone_number"
+    ],
     ignoreDuplicates: true
   });
 

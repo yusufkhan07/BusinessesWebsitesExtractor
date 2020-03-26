@@ -18,4 +18,16 @@ export default class WebsiteModel extends Model<WebsiteModel> {
   @AllowNull(false)
   @Column
   website: string;
+
+  @AllowNull(false)
+  @Column
+  name: string;
+
+  @AllowNull(false)
+  @Column
+  formatted_phone_number: string;
+
+  @AllowNull(false)
+  @Column
+  international_phone_number: string;
 }
